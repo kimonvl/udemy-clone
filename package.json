@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "framer-motion": "^12.4.2",
+    "lodash.debounce": "^4.0.8"
+  }
+}
