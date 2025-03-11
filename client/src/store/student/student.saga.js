@@ -1,5 +1,5 @@
 import { all, call, put, takeLatest } from "redux-saga/effects";
-import { fetchAllCoursesFailed, fetchAllCoursesStart, fetchAllCoursesSuccess, fetchFeaturedCoursesFailed, fetchFeaturedCoursesStart, fetchFeaturedCoursesSuccess } from "./studentSlice";
+import { fetchAllCoursesFailed, fetchAllCoursesStart, fetchAllCoursesSuccess, fetchCourseDetailsFailed, fetchCourseDetailsStart, fetchCourseDetailsSuccess, fetchFeaturedCoursesFailed, fetchFeaturedCoursesStart, fetchFeaturedCoursesSuccess } from "./studentSlice";
 import { sendAxiosPostJson } from "@/utils/axios.utils";
 import { toast } from "sonner";
 
@@ -41,6 +41,24 @@ export function* fetchAllCourses(action) {
     }
 }
 
+export function* fetchCourseDetails(action) {
+    try {
+        const res = yield call(sendAxiosPostJson, `student/get-course-details/${action.payload}`)
+        if (res && res.data.success) {
+            yield put(fetchCourseDetailsSuccess(res.data.course));
+            toast.success(res.data.message);
+        }
+    } catch (error) {
+        console.error("Logout Error:", error); // Debugging log
+
+        const errorMessage = error.response?.data?.message || "An error occurred";
+        const errorStatus = error.response?.status || 500;
+
+        yield put(fetchCourseDetailsFailed({ message: errorMessage, status: errorStatus }));
+        toast.error(errorMessage);
+    }
+}
+
 export function* onFetchFeaturedCoursesStart() {
     yield takeLatest(fetchFeaturedCoursesStart, fetchFeaturedCourses)
 }
@@ -49,9 +67,14 @@ export function* onFetchAllCoursesStart() {
     yield takeLatest(fetchAllCoursesStart, fetchAllCourses)
 }
 
+export function* onFetchCourseDetailsStart() {
+    yield takeLatest(fetchCourseDetailsStart, fetchCourseDetails)
+}
+
 export function* studentSagas() {
     yield all([
         call(onFetchFeaturedCoursesStart),
         call(onFetchAllCoursesStart),
+        call(onFetchCourseDetailsStart),
     ])
 }

@@ -6,6 +6,7 @@ const initialState = {
     error: null,
     featuredCourses: [],
     allCourses: [],
+    selectedCourse: null,
 }
 
 export const studentSlice = createSlice({
@@ -34,6 +35,17 @@ export const studentSlice = createSlice({
             state.loading = false
             state.error = action.payload
         },
+        fetchCourseDetailsStart: (state) => {
+            state.loading = true
+        },
+        fetchCourseDetailsSuccess: (state, action) => {
+            state.loading = false
+            state.selectedCourse = action.payload
+        },
+        fetchCourseDetailsFailed: (state, action) => {
+            state.loading = false
+            state.error = action.payload
+        },
     },
     extraReducers: (builder) => {
         builder.addCase(logoutSuccess, () => initialState); // ✅ Reset state on logout
@@ -48,5 +60,8 @@ export const {
     fetchAllCoursesStart,
     fetchAllCoursesSuccess,
     fetchAllCoursesFailed,
+    fetchCourseDetailsStart,
+    fetchCourseDetailsSuccess,
+    fetchCourseDetailsFailed,
 } = studentSlice.actions
 export default studentReducer

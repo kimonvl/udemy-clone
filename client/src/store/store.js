@@ -8,6 +8,7 @@ import { persistStore, persistReducer } from 'redux-persist';
 import instructorReducer from './instructor/instructorSlice';
 import instructorMiddleware from './instructor/instructor.middleware';
 import studentReducer from './student/studentSlice';
+import orderReducer from './order/orderSlice';
 
 // Create saga middleware
 const sagaMiddleware = createSagaMiddleware();
@@ -34,11 +35,19 @@ const persistStudentConfig = {
     
   ], 
 };
+const persistOrderConfig = {
+  key: 'order',
+  storage,  // Uses localStorage
+  whitelist: [
+    "currentOrderId",
+  ], 
+};
 
 // Wrap authReducer with persistReducer
 const persistedAuthReducer = persistReducer(persistAuthConfig, authReducer);
 const persistedInstructorReducer = persistReducer(persistInstructorConfig, instructorReducer);
 const persistedStudentReducer = persistReducer(persistStudentConfig, studentReducer);
+const persistedOrderReducer = persistReducer(persistOrderConfig, orderReducer);
 
 const middlewares = [sagaMiddleware, logger, instructorMiddleware];
 
@@ -47,6 +56,7 @@ export const store = configureStore({
     auth: persistedAuthReducer,
     instructor: persistedInstructorReducer,
     student: persistedStudentReducer,
+    order: persistedOrderReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

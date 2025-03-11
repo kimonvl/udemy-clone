@@ -7,7 +7,7 @@ import { filterOptions, sortOptions } from '@/config/config'
 import { ArrowUpDownIcon } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { fetchAllCoursesStart } from '@/store/student/studentSlice'
+import { fetchAllCoursesStart, fetchCourseDetailsStart } from '@/store/student/studentSlice'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectStudentAllCourses } from '@/store/student/student.selector'
 
@@ -73,6 +73,7 @@ const StudentCoursesPage = () => {
     }
 
     const handleNavigateToCourseDetails = (courseId) => {
+        dispatch(fetchCourseDetailsStart(courseId))
         navigate('/course-details')
     }
 

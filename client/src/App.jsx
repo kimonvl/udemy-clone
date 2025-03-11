@@ -12,6 +12,7 @@ import { checkAuthenticatedStart } from './store/auth/authSlice'
 import CreateNewCoursePage from './pages/instructor/CreateNewCoursePage'
 import StudentCoursesPage from './pages/student/StudentCoursesPage'
 import StudentCourseDetailsPage from './pages/student/StudentCourseDetailsPage'
+import PaypalPaymentReturnPage from './pages/student/PaypalPaymentReturnPage'
 
 function App() {
   const dispatch = useDispatch();
@@ -72,6 +73,12 @@ function App() {
           path='/course-details'
           element={
             <ProtectedRoute loading={loading} isAuthenticated={isAuthenticated} user={currentUser} element={<StudentCourseDetailsPage />}/>
+          }
+        />
+        <Route
+          path='/payment-return'
+          element={
+            <ProtectedRoute loading={loading} isAuthenticated={isAuthenticated} user={currentUser} element={<PaypalPaymentReturnPage />}/>
           }
         />
       </Route>

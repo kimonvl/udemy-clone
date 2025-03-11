@@ -16,3 +16,8 @@ export const selectStudentAllCourses = createSelector(
     [selectStudentReducer],
     (studentrSlice) => studentrSlice.allCourses
 )
+
+export const selectStudentSelectedCourse = createSelector(
+    [selectStudentReducer],
+    (studentrSlice) => studentrSlice.selectedCourse
+)

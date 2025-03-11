@@ -6,6 +6,7 @@ import connectDB from "./utils/db.js";
 import authRouter from "./routes/auth.routes.js";
 import instructorRouter from "./routes/instructor.routes.js";
 import studentRouter from "./routes/student.routes.js";
+import orderRouter from "./routes/order.routes.js";
 
 dotenv.config({});
 const app = express();
@@ -27,6 +28,7 @@ app.use(
   app.use("/auth", authRouter);
   app.use("/instructor", instructorRouter);
   app.use("/student", studentRouter);
+  app.use("/order", orderRouter);
 
   app.listen(PORT, () => {
     connectDB();

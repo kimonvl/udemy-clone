@@ -2,9 +2,10 @@ import dotenv from "dotenv";
 import { Course } from "../models/Course.model.js";
 import paypal from "../utils/paypal.js";
 import { Order } from "../models/Order.js";
+import { StudentCourses } from "../models/StudentCourses.js";
 dotenv.config({});
 
-const createOrder = async (req, res) => {
+export const createOrder = async (req, res) => {
     try {
         const userId = req.id
         const {courseId, orderStatus, paymentMethod, paymentStatus, orderDate, paymentId, payerId} = req.body
@@ -26,7 +27,7 @@ const createOrder = async (req, res) => {
                 return_url: `${process.env.CLIENT_URL}/payment-return`,
                 cancel_url: `${process.env.CLIENT_URL}/payment-cancel`,
             },
-            transaction: [
+            transactions: [
                 {
                     item_list: {
                         items: [
@@ -85,5 +86,74 @@ const createOrder = async (req, res) => {
             message: "Error while creating order",
             success: false,
         });
+    }
+}
+
+export const finalizeOrder = async (req, res) => {
+    try {
+        const {paymentId, payerId, orderId} = req.body
+        const userId = req.id
+
+        let order = await Order.findById(orderId)
+        if(!order){
+            return res.status(401).json({
+                message: "Could not fing order order",
+                success: false,
+            });
+        }
+        order.paymentId = paymentId
+        order.payerId = payerId
+        order.paymentStatus = "paid"
+        order.orderStatus = "confirmed"
+        await order.save()
+
+        let studentCourses = await StudentCourses.findOne({student: userId})
+        if(!studentCourses){
+            const newStudentCourses = await StudentCourses.create({
+                student: userId,
+                courses: [
+                    {
+                        course: order.course,
+                        dateOfPurchase: new Date()
+                    }
+                ]
+            })
+            if(!newStudentCourses){
+                return res.status(401).json({
+                    message: "Error while creating StudentCourses",
+                    success: false,
+                });
+            }
+        }else{
+            studentCourses.courses.push({
+                course: order.course,
+                dateOfPurchase: new Date(),
+            })
+            await studentCourses.save()
+        }
+
+        let course = await Course.findById(order.course)
+        if(!course){
+            return res.status(401).json({
+                message: "Could not find course",
+                success: false,
+            })
+        }
+        console.log("adding student to course", userId);
+        
+        course.students.push(userId)
+        await course.save()
+
+        return res.status(200).json({
+            message: "Order finalized successfully",
+            success: true,
+        })
+        
+    } catch (error) {
+        console.log(error);
+        return res.status(401).json({
+            message: "Error while finalizing order",
+            success: false,
+        })
     }
 }
