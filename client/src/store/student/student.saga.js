@@ -1,5 +1,5 @@
 import { all, call, put, takeLatest } from "redux-saga/effects";
-import { fetchAllCoursesFailed, fetchAllCoursesStart, fetchAllCoursesSuccess, fetchCourseDetailsFailed, fetchCourseDetailsStart, fetchCourseDetailsSuccess, fetchFeaturedCoursesFailed, fetchFeaturedCoursesStart, fetchFeaturedCoursesSuccess } from "./studentSlice";
+import { fetchAllCoursesFailed, fetchAllCoursesStart, fetchAllCoursesSuccess, fetchCourseDetailsFailed, fetchCourseDetailsStart, fetchCourseDetailsSuccess, fetchCourseProgressFailed, fetchCourseProgressStart, fetchCourseProgressSuccess, fetchFeaturedCoursesFailed, fetchFeaturedCoursesStart, fetchFeaturedCoursesSuccess } from "./studentSlice";
 import { sendAxiosPostJson } from "@/utils/axios.utils";
 import { toast } from "sonner";
 
@@ -59,6 +59,24 @@ export function* fetchCourseDetails(action) {
     }
 }
 
+export function* fetchCourseProgress(action) {
+    try {
+        const res = yield call(sendAxiosPostJson, `student/get-course-progress/${action.payload}`)
+        if (res && res.data.success) {
+            yield put(fetchCourseProgressSuccess(res.data.course));
+            toast.success(res.data.message);
+        }
+    } catch (error) {
+        console.error("Logout Error:", error); // Debugging log
+
+        const errorMessage = error.response?.data?.message || "An error occurred";
+        const errorStatus = error.response?.status || 500;
+
+        yield put(fetchCourseProgressFailed({ message: errorMessage, status: errorStatus }));
+        toast.error(errorMessage);
+    }
+}
+
 export function* onFetchFeaturedCoursesStart() {
     yield takeLatest(fetchFeaturedCoursesStart, fetchFeaturedCourses)
 }
@@ -71,10 +89,17 @@ export function* onFetchCourseDetailsStart() {
     yield takeLatest(fetchCourseDetailsStart, fetchCourseDetails)
 }
 
+export function* onFetchCourseProgressStart() {
+    yield takeLatest(fetchCourseProgressStart, fetchCourseProgress)
+}
+
+
+
 export function* studentSagas() {
     yield all([
         call(onFetchFeaturedCoursesStart),
         call(onFetchAllCoursesStart),
         call(onFetchCourseDetailsStart),
+        call(onFetchCourseProgressStart)
     ])
 }

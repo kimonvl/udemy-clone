@@ -14,7 +14,7 @@ const StudentCourseDetailsPage = () => {
   const [aprovalUrl, setAprovalUrl] = useState("")
 
   const handlePayment = () => {
-    if(selectedCourse !== null){
+    if (selectedCourse !== null) {
       const paymentPayload = {
         orderStatus: "pending",
         paymentMethod: "paypal",
@@ -24,11 +24,11 @@ const StudentCourseDetailsPage = () => {
         payerId: "",
         courseId: selectedCourse._id
       }
-      dispatch(createOrderStart({paymentPayload, setAprovalUrl}))
+      dispatch(createOrderStart({ paymentPayload, setAprovalUrl }))
     }
   }
 
-  if(aprovalUrl != ""){
+  if (aprovalUrl != "") {
     window.location.href = aprovalUrl
   }
 
@@ -73,44 +73,56 @@ const StudentCourseDetailsPage = () => {
               </ul>
             </CardContent>
           </Card>
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>Course Curriculum</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-none space-y-2"> {/* Add space-y-2 to control spacing */}
-                {selectedCourse?.lectures.map((lecture) => (
-                  <li
-                    key={lecture?._id}
-                    className={`${lecture?.freePreview ? "cursor-pointer" : "cursor-not-allowed"
-                      } flex flex-col items-start`} // Use items-start instead of left
-                    onClick={() => null}
-                  >
-                    <div className="flex items-center">
-                      {lecture?.freePreview ? (
-                        <PlayCircle className="mr-2 h-4 w-4" />
-                      ) : (
-                        <Lock className="mr-2 h-4 w-4" />
-                      )}
-                      <span>{lecture?.title}</span>
-                    </div>
-                    {
-                      lecture?.freePreview && (
-                        <div className="aspect-video rounded-lg flex">
-                          <VideoPlayer width="450px" height="200px" url={lecture?.video} />
-                        </div>
-                      )
-                    }
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          <div className="flex w-full gap-2">
+  {/* First Card - Course Curriculum (Scrollable) */}
+  <Card className="flex-1 h-[420px]">
+    <CardHeader>
+      <CardTitle>Course Curriculum</CardTitle>
+    </CardHeader>
+    {/* Scrollable Content */}
+    <CardContent className="flex flex-col h-full overflow-y-auto">
+      <ul className="list-none space-y-2">
+        {selectedCourse?.lectures.map((lecture) => (
+          <li
+            key={lecture?._id}
+            className={`${lecture?.freePreview ? "cursor-pointer" : "cursor-not-allowed"
+              } flex flex-col items-start`}
+            onClick={() => null}
+          >
+            <div className="flex items-center">
+              {lecture?.freePreview ? (
+                <PlayCircle className="mr-2 h-4 w-4" />
+              ) : (
+                <Lock className="mr-2 h-4 w-4" />
+              )}
+              <span>{lecture?.title}</span>
+            </div>
+            {lecture?.freePreview && (
+              <div className="aspect-video rounded-lg flex">
+                <VideoPlayer width="450px" height="200px" url={lecture?.video} />
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+    </CardContent>
+  </Card>
 
-          <div className='mb-4'>
-            <span className='text-3xl font-bold'>Price: {selectedCourse?.pricing}$</span>
-          </div>
-          <Button onClick={() => handlePayment()} className="w-full">Buy Now</Button>
+  {/* Second Card - Pricing & Buy Button (Fixed height) */}
+  <Card className="flex-1 h-[420px]">
+    <CardContent className="flex flex-col justify-center items-center h-full">
+      <div className="mb-4 text-center">
+        <span className="text-3xl font-bold">Price: {selectedCourse?.pricing}$</span>
+      </div>
+      <Button onClick={() => handlePayment()} className="w-full">Buy Now</Button>
+    </CardContent>
+  </Card>
+</div>
+
+
+
+
+
         </main>
       </div>
     </div>

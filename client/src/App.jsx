@@ -13,6 +13,7 @@ import CreateNewCoursePage from './pages/instructor/CreateNewCoursePage'
 import StudentCoursesPage from './pages/student/StudentCoursesPage'
 import StudentCourseDetailsPage from './pages/student/StudentCourseDetailsPage'
 import PaypalPaymentReturnPage from './pages/student/PaypalPaymentReturnPage'
+import StudentCourseProgressPage from './pages/student/StudentCourseProgressPage'
 
 function App() {
   const dispatch = useDispatch();
@@ -73,6 +74,12 @@ function App() {
           path='/course-details'
           element={
             <ProtectedRoute loading={loading} isAuthenticated={isAuthenticated} user={currentUser} element={<StudentCourseDetailsPage />}/>
+          }
+        />
+        <Route
+          path='/course-progress/:courseId'
+          element={
+            <ProtectedRoute loading={loading} isAuthenticated={isAuthenticated} user={currentUser} element={<StudentCourseProgressPage />}/>
           }
         />
         <Route

@@ -15,6 +15,7 @@ const StudentCoursesPage = () => {
     const dispatch = useDispatch()
     const navigate = useNavigate()
     const allCourses = useSelector(selectStudentAllCourses)
+    console.log("allCourses",allCourses)
     const [filters, setFilters] = useState({
         category: [],
         level: [],
@@ -72,9 +73,13 @@ const StudentCoursesPage = () => {
         }
     }
 
-    const handleNavigateToCourseDetails = (courseId) => {
-        dispatch(fetchCourseDetailsStart(courseId))
-        navigate('/course-details')
+    const handleNavigateToCourseDetails = (course) => {
+        if(course.owned){
+            navigate(`/course-progress/${course._id}`)
+        }else{
+            dispatch(fetchCourseDetailsStart(course._id))
+            navigate('/course-details')
+        }
     }
 
     return (
@@ -136,7 +141,7 @@ const StudentCoursesPage = () => {
                                 <Card
                                     className="cursor-pointer"
                                     key={course?._id}
-                                    onClick={() => handleNavigateToCourseDetails(course?._id)}
+                                    onClick={() => handleNavigateToCourseDetails(course)}
                                 >
                                     <CardContent className="flex gap-4 p-4">
                                         <div className='w-48 h-32 flex-shrink-0'>
@@ -144,7 +149,7 @@ const StudentCoursesPage = () => {
                                         </div>
                                         <div className='flex-1'>
                                             <CardTitle className="text-xl mb-2">
-                                                {course?.title}
+                                                {`${course?.title}${course.owned ? " owned" : ""}`}
                                             </CardTitle>
                                             <p className='text-sm text-gray-600 mb-1'>
                                                 Created By{" "}

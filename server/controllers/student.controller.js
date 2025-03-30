@@ -1,4 +1,5 @@
 import { Course } from "../models/Course.model.js";
+import { StudentCourses } from "../models/StudentCourses.js";
 
 export const getFeaturedCourses = async (req, res) => {
     try {
@@ -42,6 +43,7 @@ export const getAllCourses = async (req, res) => {
     try {
         const { filters } = req.body
         let filter = {}
+        const studentId = req.id
         if (filters["category"]?.length > 0) {
             filter.category = { $in: filters["category"] }
         }
@@ -51,12 +53,27 @@ export const getAllCourses = async (req, res) => {
         if (filters["primaryLanguage"]?.length > 0) {
             filter.primaryLanguage = { $in: filters["primaryLanguage"] }
         }
-        const allCourses = await Course.find(filter).populate("instructor", "username")
-
+        const studentCourses = await StudentCourses.findOne({student: studentId})
+        let allCourses = await Course.find(filter).populate("instructor", "username")
+        //const result = allCourses.filter((course) => !studentCourses.courses.find((stCourse) => {return stCourse.course.toString() === course._id.toString()}))
+        const result = allCourses.map((course) => {
+            if(studentCourses && studentCourses.courses.find((stCourse) => {return stCourse.course.toString() === course._id.toString()})){
+                return {
+                    ...course._doc,
+                    owned: true
+                }
+            }else{
+                return {
+                    ...course._doc,
+                    owned: false
+                }
+            }
+        })
+       
         return res.status(200).json({
             message: "Fetched all filtered courses successfully",
             success: true,
-            allCourses,
+            allCourses: result,
         });
 
     } catch (error) {
@@ -87,6 +104,44 @@ export const getCourseDetails = async (req, res) => {
             message: "Course fetched successfully",
             success: true,
             course,
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(401).json({
+            message: "Error while fetching  course details",
+            success: false,
+        });
+    }
+}
+
+export const getCourseProgress = async (req, res) => {
+    try {
+        const courseId = req.params.id
+        const studentId = req.id
+
+        const course = await Course.findById(courseId)
+            .populate({ path: 'instructor', select: 'username' }) // Populate instructor's username
+            .populate('lectures') // Populate lectures array
+
+        if (!course) {
+            return res.status(401).json({
+                message: "Could not fing course",
+                success: false,
+            });
+        }
+
+        const stdCourses = await StudentCourses.findOne({student: studentId})
+        const progressIndex = stdCourses.courses.find((course) => course.course.toString() === courseId).progressIndex
+        console.log("progressIndex", progressIndex)
+        const result = {
+            ...course._doc,
+            progressIndex
+        }
+
+        return res.status(200).json({
+            message: "Course fetched successfully",
+            success: true,
+            course: result,
         });
     } catch (error) {
         console.log(error);

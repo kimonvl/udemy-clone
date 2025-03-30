@@ -1,7 +1,7 @@
 import React, { useRef } from 'react'
 import ReactPlayer from 'react-player'
 
-const VideoPlayer = ({width="100%", height="100%", url}) => {
+const VideoPlayer = ({width="100%", height="100%", url, handleOnEnded = () => {}}) => {
     const playerContairRef = useRef(null)
     const playerRef = useRef(null)
   return (
@@ -17,6 +17,7 @@ const VideoPlayer = ({width="100%", height="100%", url}) => {
         width="100%"
         height={"100%"}
         controls={true}
+        onEnded={() => handleOnEnded()}
         />
 
 
