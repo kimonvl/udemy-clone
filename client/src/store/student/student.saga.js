@@ -1,5 +1,5 @@
 import { all, call, put, takeLatest } from "redux-saga/effects";
-import { fetchAllCoursesFailed, fetchAllCoursesStart, fetchAllCoursesSuccess, fetchCourseDetailsFailed, fetchCourseDetailsStart, fetchCourseDetailsSuccess, fetchCourseProgressFailed, fetchCourseProgressStart, fetchCourseProgressSuccess, fetchFeaturedCoursesFailed, fetchFeaturedCoursesStart, fetchFeaturedCoursesSuccess } from "./studentSlice";
+import { checkCourseAccess, fetchAllCoursesFailed, fetchAllCoursesStart, fetchAllCoursesSuccess, fetchCourseDetailsFailed, fetchCourseDetailsStart, fetchCourseDetailsSuccess, fetchCourseProgressFailed, fetchCourseProgressStart, fetchCourseProgressSuccess, fetchFeaturedCoursesFailed, fetchFeaturedCoursesStart, fetchFeaturedCoursesSuccess } from "./studentSlice";
 import { sendAxiosPostJson } from "@/utils/axios.utils";
 import { toast } from "sonner";
 
@@ -63,7 +63,12 @@ export function* fetchCourseProgress(action) {
     try {
         const res = yield call(sendAxiosPostJson, `student/get-course-progress/${action.payload}`)
         if (res && res.data.success) {
+            yield put(checkCourseAccess(true))
             yield put(fetchCourseProgressSuccess(res.data.course));
+            toast.success(res.data.message);
+        } else {
+            yield put(checkCourseAccess(false));
+            yield put(fetchCourseProgressFailed({ message: "User does not have access to course", status: 0 }));
             toast.success(res.data.message);
         }
     } catch (error) {
@@ -93,13 +98,11 @@ export function* onFetchCourseProgressStart() {
     yield takeLatest(fetchCourseProgressStart, fetchCourseProgress)
 }
 
-
-
 export function* studentSagas() {
     yield all([
         call(onFetchFeaturedCoursesStart),
         call(onFetchAllCoursesStart),
         call(onFetchCourseDetailsStart),
-        call(onFetchCourseProgressStart)
+        call(onFetchCourseProgressStart),
     ])
 }

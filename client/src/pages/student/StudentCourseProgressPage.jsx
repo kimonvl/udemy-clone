@@ -1,31 +1,44 @@
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import VideoPlayer from '@/components/video-player/VideoPlayer'
-import { selectStudentSelectedCourseProgress } from '@/store/student/student.selector'
+import { selectStudentHaveCourseAccess, selectStudentLoading, selectStudentSelectedCourseProgress } from '@/store/student/student.selector'
 import { fetchCourseProgressStart } from '@/store/student/studentSlice'
 import { Check, ChevronLeft, ChevronRight, Play } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useParams } from 'react-router-dom'
 
-//implement the marked as watched feature
-
 const StudentCourseProgressPage = () => {
   const dispatch = useDispatch()
   const {courseId} = useParams()
   const selectedCourse = useSelector(selectStudentSelectedCourseProgress)
+  const haveCourseAccess = useSelector(selectStudentHaveCourseAccess)
+  const loading = useSelector(selectStudentLoading)
 
-  const [selectedVideo, setSelectedVideo] = useState("")
+  const [selectedLecture, setSelectedLecture] = useState(null)
+  const [progressIndex, setProgressIndex] = useState(selectedCourse?.progressIndex || [])
 
-  console.log("course", selectedCourse)
+
   useEffect(() => {
-    // fetch the course progress
     dispatch(fetchCourseProgressStart(courseId))
   }, [courseId])
+
+  useEffect(() => {
+    setProgressIndex(selectedCourse?.progressIndex || [])
+  }, [selectedCourse])
+
+  const handleVideoWatched = (index) => {
+    setProgressIndex((prevProgress) => {
+      if (prevProgress.includes(index)) return prevProgress; // No duplicates
+      return [...prevProgress, index]; // Add new index
+    });
+  }
+console.log("indexes", progressIndex)
+  if(loading) return <Skeleton/>
 
   return (
     <div className='flex flex-col h-screen bg-[#1c1d1f] text-white'>
@@ -36,7 +49,7 @@ const StudentCourseProgressPage = () => {
             Back to My Courses Page
           </Button>
           <h1 className='text-lg font-bold hidden md:block'>
-            Title
+            {selectedCourse?.title}
           </h1>
         </div>
         <Button>
@@ -45,10 +58,10 @@ const StudentCourseProgressPage = () => {
         </Button>
       </div>
       <div className='flex flex-1 overflow-hidden'>
-        <div className={`flex-1 ${true ? "mr-[400px]" : ""} transition-all duration-300`}>
-          <VideoPlayer width='100%' height='500px' url={""}/>
+        <div className={`flex-1 ${false ? "mr-[400px]" : ""} transition-all duration-300`}>
+          <VideoPlayer width='100%' height='500px' url={selectedLecture?.video} handleOnEnded={() => handleVideoWatched(selectedLecture?.lectureIndex)}/>
           <div className='p-6 bg-[#1c1d1f]'>
-            <h2 className='text-2xl font-bold mb-2'>Lecture title</h2>
+            <h2 className='text-2xl font-bold mb-2'>{}</h2>
           </div>
         </div>
         <div className={` w-[400px] bg-[#1c1d1f] border-l border-gray-700 transition-all duration-300 ${true ? "translate-x-0" : "translate-x-full"}`}>
@@ -65,14 +78,15 @@ const StudentCourseProgressPage = () => {
               <ScrollArea className="h-full">
                 <div className='p-4 space-y-4'>
                   {
-                    [1,2,3,4,5].map((item) => (
-                      <div className='flex items-center space-x-2 text-sm text-white font-bold cursor-pointer'>
+                    selectedCourse?.lectures.length > 0 && selectedCourse?.lectures.map((lecture) => (
+                      <div onClick={() => setSelectedLecture(lecture)} className='flex items-center space-x-2 text-sm text-white font-bold cursor-pointer'>
                         {
-                          true ? (<Check className='h-4 w-4 text-green-500'/>) : (
+                          
+                          progressIndex?.includes(lecture.lectureIndex) ? (<Check className='h-4 w-4 text-green-500'/>) : (
                             <Play className='h-4 w-4'/>
                           )
                         }
-                        <span>lecture title</span>
+                        <span>{lecture?.title}</span>
                       </div>
                     ))
                   }
@@ -83,14 +97,14 @@ const StudentCourseProgressPage = () => {
               <ScrollArea className="h-full">
                 <div className='p-4'>
                   <h2 className='text-xl font-bold mb-4'>About this course</h2>
-                  <p className='text-gray-400'>Course Description</p>
+                  <p className='text-gray-400'>{selectedCourse?.description}</p>
                 </div>
               </ScrollArea>
             </TabsContent>
           </Tabs>
         </div>
       </div>
-      <Dialog open={false}>
+      <Dialog open={!haveCourseAccess}>
         <DialogContent className="sm:w-[425px]">
           <DialogHeader>
             <DialogTitle>You can't view this page</DialogTitle>

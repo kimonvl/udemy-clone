@@ -130,8 +130,17 @@ export const getCourseProgress = async (req, res) => {
             });
         }
 
-        const stdCourses = await StudentCourses.findOne({student: studentId})
-        const progressIndex = stdCourses.courses.find((course) => course.course.toString() === courseId).progressIndex
+        const stdCourses = await StudentCourses.findOne({
+            student: studentId,
+            courses: {$elemMatch: {course: courseId}}
+        })
+        if(!stdCourses){
+            return res.status(201).json({
+                message: "No access to course",
+                success: false,
+            });
+        }
+        const progressIndex = stdCourses.courses.find((course) => course.course.toString() === courseId)?.progressIndex
         console.log("progressIndex", progressIndex)
         const result = {
             ...course._doc,

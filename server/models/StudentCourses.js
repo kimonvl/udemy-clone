@@ -6,7 +6,7 @@ const studentCoursesSchema = new mongoose.Schema({
         {
             course: {type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true},
             dateOfPurchase: { type: Date, default: Date.now },
-            progressIndex: { type: Number, default: 0 },
+            progressIndex: { type: [Number], default: [] },
         }
     ],
 }, { timestamps: true });

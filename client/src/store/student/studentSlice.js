@@ -8,6 +8,7 @@ const initialState = {
     allCourses: [],
     selectedCourse: null,
     selectedCourseProgress: null,
+    haveCourseAccess: false,
 }
 
 export const studentSlice = createSlice({
@@ -58,6 +59,9 @@ export const studentSlice = createSlice({
             state.loading = false
             state.error = action.payload
         },
+        checkCourseAccess: (state, action) => {
+            state.haveCourseAccess = action.payload
+        }
     },
     extraReducers: (builder) => {
         builder.addCase(logoutSuccess, () => initialState); // ✅ Reset state on logout
@@ -78,5 +82,6 @@ export const {
     fetchCourseProgressStart,
     fetchCourseProgressSuccess,
     fetchCourseProgressFailed,
+    checkCourseAccess,
 } = studentSlice.actions
 export default studentReducer

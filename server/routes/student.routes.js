@@ -9,5 +9,4 @@ studentRouter.route("/get-all-courses").post(isAuthenticated, getAllCourses);
 studentRouter.route("/get-course-details/:id").post(isAuthenticated, getCourseDetails);
 studentRouter.route("/get-course-progress/:id").post(isAuthenticated, getCourseProgress);
 
-
 export default studentRouter

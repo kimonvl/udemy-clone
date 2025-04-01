@@ -26,3 +26,8 @@ export const selectStudentSelectedCourseProgress = createSelector(
     [selectStudentReducer],
     (studentrSlice) => studentrSlice.selectedCourseProgress
 )
+
+export const selectStudentHaveCourseAccess = createSelector(
+    [selectStudentReducer],
+    (studentrSlice) => studentrSlice.haveCourseAccess
+)
