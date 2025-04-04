@@ -59,6 +59,16 @@ export const studentSlice = createSlice({
             state.loading = false
             state.error = action.payload
         },
+        updateCourseProgressStart: (state) => {
+            state.loading = true
+        },
+        updateCourseProgressSuccess: (state, action) => {
+            state.loading = false
+        },
+        updateCourseProgressFailed: (state, action) => {
+            state.loading = false
+            state.error = action.payload
+        },
         checkCourseAccess: (state, action) => {
             state.haveCourseAccess = action.payload
         }
@@ -83,5 +93,8 @@ export const {
     fetchCourseProgressSuccess,
     fetchCourseProgressFailed,
     checkCourseAccess,
+    updateCourseProgressStart,
+    updateCourseProgressSuccess,
+    updateCourseProgressFailed,
 } = studentSlice.actions
 export default studentReducer

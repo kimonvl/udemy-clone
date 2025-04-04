@@ -125,7 +125,7 @@ export const getCourseProgress = async (req, res) => {
 
         if (!course) {
             return res.status(401).json({
-                message: "Could not fing course",
+                message: "Could not find course",
                 success: false,
             });
         }
@@ -141,7 +141,6 @@ export const getCourseProgress = async (req, res) => {
             });
         }
         const progressIndex = stdCourses.courses.find((course) => course.course.toString() === courseId)?.progressIndex
-        console.log("progressIndex", progressIndex)
         const result = {
             ...course._doc,
             progressIndex
@@ -156,6 +155,56 @@ export const getCourseProgress = async (req, res) => {
         console.log(error);
         return res.status(401).json({
             message: "Error while fetching  course details",
+            success: false,
+        });
+    }
+}
+
+export const updateCourseProgress = async (req, res) => {
+    try {
+        const courseId = req.params.id
+        const studentId = req.id
+        let {indexes} = req.body
+        indexes = [...new Set(indexes)].sort((a, b) => a - b);
+
+        let stdCourses = await StudentCourses.findOne({student: studentId})
+
+        let course  = stdCourses?.courses.find((c) => c.course.toString() === courseId)
+        if(!course){
+            return res.status(201).json({
+                message: "Dont have access to course",
+                success: false,
+            });
+        }
+        //check if course's indexes are subset of req.body indexes
+        const isSubset = course?.progressIndex.every((index) => indexes.includes(index))
+        if(!isSubset){
+            return res.status(401).json({
+                message: "Invalid indexes",
+                success: false,
+            });
+        }
+
+        let result = await StudentCourses.findOneAndUpdate(
+            { student: studentId, "courses.course": courseId },  // Match the student and course
+            { $set: { "courses.$.progressIndex": indexes } },    // Update progressIndex of the matched course
+        )
+
+        if(!result){
+            return res.status(401).json({
+                message: "Failed to update indexes",
+                success: false,
+            })
+        }
+
+        return res.status(200).json({
+            message: "Indexes updated successfully",
+            success: true,
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(401).json({
+            message: "Error while updating  course progress",
             success: false,
         });
     }

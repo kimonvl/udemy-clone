@@ -1,5 +1,5 @@
 import { all, call, put, takeLatest } from "redux-saga/effects";
-import { checkCourseAccess, fetchAllCoursesFailed, fetchAllCoursesStart, fetchAllCoursesSuccess, fetchCourseDetailsFailed, fetchCourseDetailsStart, fetchCourseDetailsSuccess, fetchCourseProgressFailed, fetchCourseProgressStart, fetchCourseProgressSuccess, fetchFeaturedCoursesFailed, fetchFeaturedCoursesStart, fetchFeaturedCoursesSuccess } from "./studentSlice";
+import { checkCourseAccess, fetchAllCoursesFailed, fetchAllCoursesStart, fetchAllCoursesSuccess, fetchCourseDetailsFailed, fetchCourseDetailsStart, fetchCourseDetailsSuccess, fetchCourseProgressFailed, fetchCourseProgressStart, fetchCourseProgressSuccess, fetchFeaturedCoursesFailed, fetchFeaturedCoursesStart, fetchFeaturedCoursesSuccess, updateCourseProgressFailed, updateCourseProgressStart, updateCourseProgressSuccess } from "./studentSlice";
 import { sendAxiosPostJson } from "@/utils/axios.utils";
 import { toast } from "sonner";
 
@@ -82,6 +82,29 @@ export function* fetchCourseProgress(action) {
     }
 }
 
+export function* updateCourseProgress(action) {
+    try {
+        const res = yield call(sendAxiosPostJson, `student/update-course-progress/${action.payload.courseId}`, {indexes: action.payload.indexes})
+        if (res && res.data.success) {
+            yield put(checkCourseAccess(true))
+            yield put(updateCourseProgressSuccess());
+            toast.success(res.data.message);
+        } else {
+            yield put(checkCourseAccess(false));
+            yield put(updateCourseProgressFailed({ message: "User does not have access to course", status: 0 }));
+            toast.success(res.data.message);
+        }
+    } catch (error) {
+        console.error("Logout Error:", error); // Debugging log
+
+        const errorMessage = error.response?.data?.message || "An error occurred";
+        const errorStatus = error.response?.status || 500;
+
+        yield put(updateCourseProgressFailed({ message: errorMessage, status: errorStatus }));
+        toast.error(errorMessage);
+    }
+}
+
 export function* onFetchFeaturedCoursesStart() {
     yield takeLatest(fetchFeaturedCoursesStart, fetchFeaturedCourses)
 }
@@ -98,11 +121,16 @@ export function* onFetchCourseProgressStart() {
     yield takeLatest(fetchCourseProgressStart, fetchCourseProgress)
 }
 
+export function* onUpdateCourseProgressStart() {
+    yield takeLatest(updateCourseProgressStart, updateCourseProgress)
+}
+
 export function* studentSagas() {
     yield all([
         call(onFetchFeaturedCoursesStart),
         call(onFetchAllCoursesStart),
         call(onFetchCourseDetailsStart),
         call(onFetchCourseProgressStart),
+        call(onUpdateCourseProgressStart),
     ])
 }

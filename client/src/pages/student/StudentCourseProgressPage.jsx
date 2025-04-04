@@ -6,22 +6,22 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import VideoPlayer from '@/components/video-player/VideoPlayer'
 import { selectStudentHaveCourseAccess, selectStudentLoading, selectStudentSelectedCourseProgress } from '@/store/student/student.selector'
-import { fetchCourseProgressStart } from '@/store/student/studentSlice'
+import { fetchCourseProgressStart, updateCourseProgressStart } from '@/store/student/studentSlice'
 import { Check, ChevronLeft, ChevronRight, Play } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useParams } from 'react-router-dom'
 
 const StudentCourseProgressPage = () => {
   const dispatch = useDispatch()
-  const {courseId} = useParams()
+  const { courseId } = useParams()
   const selectedCourse = useSelector(selectStudentSelectedCourseProgress)
   const haveCourseAccess = useSelector(selectStudentHaveCourseAccess)
   const loading = useSelector(selectStudentLoading)
 
   const [selectedLecture, setSelectedLecture] = useState(null)
   const [progressIndex, setProgressIndex] = useState(selectedCourse?.progressIndex || [])
-
+  const [courseFinished, setCourseFinished] = useState(false)
 
   useEffect(() => {
     dispatch(fetchCourseProgressStart(courseId))
@@ -31,21 +31,55 @@ const StudentCourseProgressPage = () => {
     setProgressIndex(selectedCourse?.progressIndex || [])
   }, [selectedCourse])
 
+  const latestProgressRef = useRef(progressIndex)
+
+  useEffect(() => {
+    latestProgressRef.current = progressIndex
+  }, [progressIndex])
+
+  // 2. Handle beforeunload AND unmount just once
+  useEffect(() => {
+    const sendProgressUpdate = () => {
+      if (latestProgressRef.current.length > 0) {
+        dispatch(updateCourseProgressStart({ courseId, indexes: latestProgressRef.current }))
+      }
+    }
+
+    window.addEventListener('beforeunload', sendProgressUpdate)
+
+    return () => {
+      window.removeEventListener('beforeunload', sendProgressUpdate)
+      sendProgressUpdate() // Only on unmount, not on progress change
+    }
+  }, [courseId, dispatch])
+
   const handleVideoWatched = (index) => {
     setProgressIndex((prevProgress) => {
       if (prevProgress.includes(index)) return prevProgress; // No duplicates
       return [...prevProgress, index]; // Add new index
     });
+    console.log("index", index);
+    console.log("selectedCourse?.lectures?.length", selectedCourse?.lectures?.length);
+    console.log("progressIndex?.length", progressIndex?.length);
+    if(index + 1 == selectedCourse?.lectures?.length && progressIndex?.length + 1 == selectedCourse?.lectures?.length){
+      setCourseFinished(true)
+      console.log("courseFinished true");
+      
+    }
+
+    const nextLecture = selectedCourse?.lectures?.find((lecture) => lecture.lectureIndex - 1 == index)
+    if(nextLecture){
+      setSelectedLecture(nextLecture)
+    }
   }
-console.log("indexes", progressIndex)
-  if(loading) return <Skeleton/>
+  if (loading) return <Skeleton />
 
   return (
     <div className='flex flex-col h-screen bg-[#1c1d1f] text-white'>
       <div className='flex items-center justify-between p-4 bg-[#1c1d1f] border-b border-gray-700'>
         <div className='flex items-center space-x-4'>
           <Button className="text-black" variant="ghost" size="sm">
-            <ChevronLeft className='h-4 w-4 mr-2'/>
+            <ChevronLeft className='h-4 w-4 mr-2' />
             Back to My Courses Page
           </Button>
           <h1 className='text-lg font-bold hidden md:block'>
@@ -53,15 +87,15 @@ console.log("indexes", progressIndex)
           </h1>
         </div>
         <Button>
-          <ChevronRight className='h-5 w-5'/>
-          <ChevronLeft className='h-5 w-5'/>
+          <ChevronRight className='h-5 w-5' />
+          <ChevronLeft className='h-5 w-5' />
         </Button>
       </div>
       <div className='flex flex-1 overflow-hidden'>
         <div className={`flex-1 ${false ? "mr-[400px]" : ""} transition-all duration-300`}>
-          <VideoPlayer width='100%' height='500px' url={selectedLecture?.video} handleOnEnded={() => handleVideoWatched(selectedLecture?.lectureIndex)}/>
+          <VideoPlayer width='100%' height='500px' url={selectedLecture?.video} handleOnEnded={() => handleVideoWatched(selectedLecture?.lectureIndex)} />
           <div className='p-6 bg-[#1c1d1f]'>
-            <h2 className='text-2xl font-bold mb-2'>{}</h2>
+            <h2 className='text-2xl font-bold mb-2'>{ }</h2>
           </div>
         </div>
         <div className={` w-[400px] bg-[#1c1d1f] border-l border-gray-700 transition-all duration-300 ${true ? "translate-x-0" : "translate-x-full"}`}>
@@ -81,9 +115,9 @@ console.log("indexes", progressIndex)
                     selectedCourse?.lectures.length > 0 && selectedCourse?.lectures.map((lecture) => (
                       <div onClick={() => setSelectedLecture(lecture)} className='flex items-center space-x-2 text-sm text-white font-bold cursor-pointer'>
                         {
-                          
-                          progressIndex?.includes(lecture.lectureIndex) ? (<Check className='h-4 w-4 text-green-500'/>) : (
-                            <Play className='h-4 w-4'/>
+
+                          progressIndex?.includes(lecture.lectureIndex) ? (<Check className='h-4 w-4 text-green-500' />) : (
+                            <Play className='h-4 w-4' />
                           )
                         }
                         <span>{lecture?.title}</span>
@@ -112,8 +146,8 @@ console.log("indexes", progressIndex)
           </DialogHeader>
         </DialogContent>
       </Dialog>
-      <Dialog open={false}>
-        <DialogContent showOverlay={false} className="sm:w-[425px]">
+      <Dialog open={courseFinished}>
+        <DialogContent showOverlay={courseFinished} className="sm:w-[425px]">
           <DialogHeader>
             <DialogTitle>Congratulations!</DialogTitle>
             <DialogDescription className="flex flex-col gap-3">
