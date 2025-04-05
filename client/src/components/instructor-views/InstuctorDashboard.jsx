@@ -1,19 +1,28 @@
 import { DollarSign, Users } from 'lucide-react'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchInstructorStatsStart } from '@/store/instructor/instructorSlice'
 import { selectInstructorTotalRevenue, selectInstructorTotalStudents } from '@/store/instructor/instructor.selector'
+import StudentDetailsDialog from './StudentDetailsDialog'
 
 const InstuctorDashboard = () => {
     const dispatch = useDispatch()
     const totalStudents = useSelector(selectInstructorTotalStudents)
     const totalRevenue = useSelector(selectInstructorTotalRevenue)
 
+    const [openStudentsDetailsDialog, setOpenStudentsDetailsDialog] = useState(false)
+    const [selectedStudent, setSelectedStudent] = useState(null)
+
     useEffect(() => {
         dispatch(fetchInstructorStatsStart())
     }, [])
+
+    const handleSelectStudent = (student) => {
+        setSelectedStudent(student)
+        setOpenStudentsDetailsDialog(true)
+    }
 
     const config = [
         {
@@ -63,7 +72,7 @@ const InstuctorDashboard = () => {
                             <TableBody>
                                 {
                                     totalStudents.map((student) => (
-                                        <TableRow key={student?._id}>
+                                        <TableRow onClick={() => handleSelectStudent(student)} key={student?._id}>
                                             <TableCell className="font-medium">{student?.courses?.length} Courses</TableCell>
                                             <TableCell>{student?.username}</TableCell>
                                             <TableCell>{student?.email}</TableCell>
@@ -75,6 +84,7 @@ const InstuctorDashboard = () => {
                     </div>
                 </CardContent>
             </Card>
+            <StudentDetailsDialog openDialog={openStudentsDetailsDialog} setOpenDialog={setOpenStudentsDetailsDialog} student={selectedStudent}/>
         </div>
     )
 }
