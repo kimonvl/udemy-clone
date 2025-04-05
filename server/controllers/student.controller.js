@@ -209,3 +209,37 @@ export const updateCourseProgress = async (req, res) => {
         });
     }
 }
+
+export const getStudentCourses = async (req, res) => {
+    try {
+        const studentId = req.id
+
+        const studentCourses = await StudentCourses.findOne({student: studentId}).populate({
+            path: 'courses.course',
+            select: 'image title instructor lectures',
+            populate: {
+                path: 'instructor',
+                select: 'username'
+            }
+        })
+
+        if(!studentCourses) {
+            return res.status(401).json({
+                message: "Couldn't find student courses",
+                success: false,
+            });
+        }
+
+        return res.status(200).json({
+            message: "Courses found",
+            success: true,
+            courses: studentCourses.courses
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(401).json({
+            message: "Error while fetching student courses",
+            success: false,
+        });
+    }
+}

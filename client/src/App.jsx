@@ -14,6 +14,7 @@ import StudentCoursesPage from './pages/student/StudentCoursesPage'
 import StudentCourseDetailsPage from './pages/student/StudentCourseDetailsPage'
 import PaypalPaymentReturnPage from './pages/student/PaypalPaymentReturnPage'
 import StudentCourseProgressPage from './pages/student/StudentCourseProgressPage'
+import StudentMyCoyrsesPage from './pages/student/StudentMyCoyrsesPage'
 
 function App() {
   const dispatch = useDispatch();
@@ -68,6 +69,12 @@ function App() {
           path='/courses'
           element={
             <ProtectedRoute loading={loading} isAuthenticated={isAuthenticated} user={currentUser} element={<StudentCoursesPage />}/>
+          }
+        />
+        <Route
+          path='/my-courses'
+          element={
+            <ProtectedRoute loading={loading} isAuthenticated={isAuthenticated} user={currentUser} element={<StudentMyCoyrsesPage />}/>
           }
         />
         <Route

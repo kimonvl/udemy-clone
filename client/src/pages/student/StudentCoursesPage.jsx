@@ -10,6 +10,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { fetchAllCoursesStart, fetchCourseDetailsStart } from '@/store/student/studentSlice'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectStudentAllCourses } from '@/store/student/student.selector'
+import CourseCard from '@/components/course-card/CourseCard'
 
 const StudentCoursesPage = () => {
     const dispatch = useDispatch()
@@ -138,30 +139,7 @@ const StudentCoursesPage = () => {
                     <div className='space-y-4'>
                         {
                             allCourses.map((course) => (
-                                <Card
-                                    className="cursor-pointer"
-                                    key={course?._id}
-                                    onClick={() => handleNavigateToCourseDetails(course)}
-                                >
-                                    <CardContent className="flex gap-4 p-4">
-                                        <div className='w-48 h-32 flex-shrink-0'>
-                                            <img src={course?.image} className='w-full h-full object-cover' />
-                                        </div>
-                                        <div className='flex-1'>
-                                            <CardTitle className="text-xl mb-2">
-                                                {`${course?.title}${course.owned ? " owned" : ""}`}
-                                            </CardTitle>
-                                            <p className='text-sm text-gray-600 mb-1'>
-                                                Created By{" "}
-                                                <span className='font-bold'>
-                                                    {course?.instructor?.username}
-                                                </span>
-                                            </p>
-                                            <p className='text-[16px] text-gray-600 mt-3 mb-2'>{course?.lectures?.length} lectures - {course?.level} level</p>
-                                            <p className='font-bold text-lg'>{course?.pricing} $</p>
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                                <CourseCard course={course} handleNavigateToCourseDetails={handleNavigateToCourseDetails}/>
                             ))
                         }
                     </div>

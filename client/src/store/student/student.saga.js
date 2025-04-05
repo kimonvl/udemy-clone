@@ -1,5 +1,5 @@
 import { all, call, put, takeLatest } from "redux-saga/effects";
-import { checkCourseAccess, fetchAllCoursesFailed, fetchAllCoursesStart, fetchAllCoursesSuccess, fetchCourseDetailsFailed, fetchCourseDetailsStart, fetchCourseDetailsSuccess, fetchCourseProgressFailed, fetchCourseProgressStart, fetchCourseProgressSuccess, fetchFeaturedCoursesFailed, fetchFeaturedCoursesStart, fetchFeaturedCoursesSuccess, updateCourseProgressFailed, updateCourseProgressStart, updateCourseProgressSuccess } from "./studentSlice";
+import { checkCourseAccess, fetchAllCoursesFailed, fetchAllCoursesStart, fetchAllCoursesSuccess, fetchCourseDetailsFailed, fetchCourseDetailsStart, fetchCourseDetailsSuccess, fetchCourseProgressFailed, fetchCourseProgressStart, fetchCourseProgressSuccess, fetchFeaturedCoursesFailed, fetchFeaturedCoursesStart, fetchFeaturedCoursesSuccess, fetchStudentCoursesFailed, fetchStudentCoursesStart, fetchStudentCoursesSuccess, updateCourseProgressFailed, updateCourseProgressStart, updateCourseProgressSuccess } from "./studentSlice";
 import { sendAxiosPostJson } from "@/utils/axios.utils";
 import { toast } from "sonner";
 
@@ -105,6 +105,24 @@ export function* updateCourseProgress(action) {
     }
 }
 
+export function* fetchStudentCourses() {
+    try {
+        const res = yield call(sendAxiosPostJson, `student/get-student-courses`)
+        if (res && res.data.success) {
+            yield put(fetchStudentCoursesSuccess(res.data.courses));
+            toast.success(res.data.message);
+        }
+    } catch (error) {
+        console.error("Logout Error:", error); // Debugging log
+
+        const errorMessage = error.response?.data?.message || "An error occurred";
+        const errorStatus = error.response?.status || 500;
+
+        yield put(fetchStudentCoursesFailed({ message: errorMessage, status: errorStatus }));
+        toast.error(errorMessage);
+    }
+}
+
 export function* onFetchFeaturedCoursesStart() {
     yield takeLatest(fetchFeaturedCoursesStart, fetchFeaturedCourses)
 }
@@ -125,6 +143,10 @@ export function* onUpdateCourseProgressStart() {
     yield takeLatest(updateCourseProgressStart, updateCourseProgress)
 }
 
+export function* onFetchStudentCoursesStart() {
+    yield takeLatest(fetchStudentCoursesStart, fetchStudentCourses)
+}
+
 export function* studentSagas() {
     yield all([
         call(onFetchFeaturedCoursesStart),
@@ -132,5 +154,6 @@ export function* studentSagas() {
         call(onFetchCourseDetailsStart),
         call(onFetchCourseProgressStart),
         call(onUpdateCourseProgressStart),
+        call(onFetchStudentCoursesStart),
     ])
 }
