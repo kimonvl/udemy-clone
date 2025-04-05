@@ -1,5 +1,5 @@
 import { all, call, put, select, takeLatest } from "redux-saga/effects";
-import { createNewCourseFailure, createNewCourseSuccess, deleteImageFromEditFailure, deleteImageFromEditStart, deleteImageFromEditSuccess, deleteInitialImageFailure, deleteInitialImageStart, deleteInitialImageSuccess, deleteLectureStart, deleteLectureSuccess, deleteMediaFailure, deleteMediaStart, deleteMediaSuccess, deleteTemporaryUploadedImageFailure, deleteTemporaryUploadedImageStart, deleteTemporaryUploadedImageSuccess, deleteTemprorarilyUploadedVideosFailure, deleteTemprorarilyUploadedVideosStart, deleteTemprorarilyUploadedVideosSuccess, editCourseFailure, editCourseSuccess, fetchInstructorsCourseListFailure, fetchInstructorsCourseListStart, fetchInstructorsCourseListSuccess, fetchSelectedInstructorCourseFailure, fetchSelectedInstructorCourseStart, fetchSelectedInstructorCourseSuccess, permanentlyDeleteVideosFailure, permanentlyDeleteVideosStart, permanentlyDeleteVideosSuccess, setInstructorSelectedCourse, submitEditForm, submitForm, uploadImageFromEditStart, uploadImageFromEditSuccess, uploadMediaFailure, uploadMediaStart, uploadMediaSuccess, uploadVideoFromEditFailure, uploadVideoFromEditStart, uploadVideoFromEditSuccess } from "./instructorSlice";
+import { createNewCourseFailure, createNewCourseSuccess, deleteImageFromEditFailure, deleteImageFromEditStart, deleteImageFromEditSuccess, deleteInitialImageFailure, deleteInitialImageStart, deleteInitialImageSuccess, deleteLectureStart, deleteLectureSuccess, deleteMediaFailure, deleteMediaStart, deleteMediaSuccess, deleteTemporaryUploadedImageFailure, deleteTemporaryUploadedImageStart, deleteTemporaryUploadedImageSuccess, deleteTemprorarilyUploadedVideosFailure, deleteTemprorarilyUploadedVideosStart, deleteTemprorarilyUploadedVideosSuccess, editCourseFailure, editCourseSuccess, fetchInstructorsCourseListFailure, fetchInstructorsCourseListStart, fetchInstructorsCourseListSuccess, fetchInstructorStatsFailure, fetchInstructorStatsStart, fetchInstructorStatsSuccess, fetchSelectedInstructorCourseFailure, fetchSelectedInstructorCourseStart, fetchSelectedInstructorCourseSuccess, permanentlyDeleteVideosFailure, permanentlyDeleteVideosStart, permanentlyDeleteVideosSuccess, setInstructorSelectedCourse, submitEditForm, submitForm, uploadImageFromEditStart, uploadImageFromEditSuccess, uploadMediaFailure, uploadMediaStart, uploadMediaSuccess, uploadVideoFromEditFailure, uploadVideoFromEditStart, uploadVideoFromEditSuccess } from "./instructorSlice";
 import { sendAxiosPostFormData, sendAxiosPostJson } from "@/utils/axios.utils";
 import { toast } from "sonner";
 
@@ -301,6 +301,24 @@ export function* fetchSelectedInstructorCourse(action) {
     }
 }
 
+export function* fetchInstructorStats() {
+    try {
+        const res = yield call(sendAxiosPostJson, `instructor/get-instructor-stats`)
+        if (res && res.data.success) {
+            yield put(fetchInstructorStatsSuccess(res.data.students));
+            toast.success(res.data.message);
+        }
+    } catch (error) {
+        console.error("Logout Error:", error); // Debugging log
+
+        const errorMessage = error.response?.data?.message || "An error occurred";
+        const errorStatus = error.response?.status || 500;
+
+        yield put(fetchInstructorStatsFailure({ message: errorMessage, status: errorStatus }));
+        toast.error(errorMessage);
+    }
+}
+
 export function* onSubmitForm() {
     yield takeLatest(submitForm, createNewCourse);
 }
@@ -357,6 +375,10 @@ export function* onFetchSelectedInstructorCourseStart() {
     yield takeLatest(fetchSelectedInstructorCourseStart, fetchSelectedInstructorCourse);
 }
 
+export function* onFetchInstructorStats() {
+    yield takeLatest(fetchInstructorStatsStart, fetchInstructorStats);
+}
+
 export function* instructorSagas() {
     yield all([
         call(onSubmitForm),
@@ -373,5 +395,6 @@ export function* instructorSagas() {
         call(onDeleteTemprorarilyUploadedVideosStart),
         call(onFetchInstructorsCourseListStart),
         call(onFetchSelectedInstructorCourseStart),
+        call(onFetchInstructorStats),
     ])
 }

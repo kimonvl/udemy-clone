@@ -1,7 +1,7 @@
 import express from "express";
 import isAuthenticated from "../middlewares/isAuthenticated.js";
 import { upload } from "../utils/multer.js";
-import { createNewCourse, deleteMedia, editCourse, getInstructorCourseByID, getInstructorCourseList, masDeleteVideos, uploadMedia } from "../controllers/instructor.controller.js";
+import { createNewCourse, deleteMedia, editCourse, getDashboardStats, getInstructorCourseByID, getInstructorCourseList, masDeleteVideos, uploadMedia } from "../controllers/instructor.controller.js";
 
 const instructorRouter = express.Router();
 
@@ -12,6 +12,7 @@ instructorRouter.route("/delete-media").post(isAuthenticated, deleteMedia);
 instructorRouter.route("/mas-delete-videos").post(isAuthenticated, masDeleteVideos);
 instructorRouter.route("/get-instructor-course-list").post(isAuthenticated, getInstructorCourseList);
 instructorRouter.route("/get-instructor-course/:id").post(isAuthenticated, getInstructorCourseByID);
+instructorRouter.route("/get-instructor-stats").post(isAuthenticated, getDashboardStats);
 
 
 export default instructorRouter;

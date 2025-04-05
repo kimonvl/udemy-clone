@@ -1,6 +1,8 @@
+import mongoose from "mongoose";
 import { Course } from "../models/Course.model.js";
 import { Lecture } from "../models/Lecture.model.js";
 import { deleteMediaFromCloudinary, uploadMediaToCloudinary } from "../utils/cloudinary.js";
+import { StudentCourses } from "../models/StudentCourses.js";
 
 export const uploadMedia = async (req, res) => {
     try {
@@ -37,7 +39,7 @@ export const uploadMedia = async (req, res) => {
 }
 export const deleteMedia = async (req, res) => {
     try {
-        const {mediaPublicId, resourceType} = req.body;
+        const { mediaPublicId, resourceType } = req.body;
         console.log("delete media ", mediaPublicId)
 
         if (!mediaPublicId) {
@@ -71,7 +73,7 @@ export const deleteMedia = async (req, res) => {
 
 export const masDeleteVideos = async (req, res) => {
     try {
-        let {videos} = req.body;
+        let { videos } = req.body;
         videos = JSON.parse(videos)
 
         if (videos.length <= 0) {
@@ -81,7 +83,7 @@ export const masDeleteVideos = async (req, res) => {
             });
         }
 
-        for(const video of videos){
+        for (const video of videos) {
             const result = await deleteMediaFromCloudinary(video, "video");
             console.log("delete video ", result)
             if (!result) {
@@ -111,7 +113,7 @@ export const createNewCourse = async (req, res) => {
     try {
         const instructor = req.id;
         const { title, category, level, primaryLanguage, subtitle, description, pricing, objectives, welcomeMessage, image, imagePublicId, lectures } = req.body;
-        
+
         const course = await Course.create({
             instructor,
             title,
@@ -196,14 +198,14 @@ export const editCourse = async (req, res) => {
         const { title, category, level, primaryLanguage, subtitle, description, pricing, objectives, welcomeMessage, image, imagePublicId, lectures } = req.body;
 
         const course = await Course.findById(courseId)
-        if(!course){
+        if (!course) {
             return res.status(401).json({
                 message: "Course not found",
                 success: false,
             });
         }
-        
-        if(course.instructor.toString() !== instructorId){
+
+        if (course.instructor.toString() !== instructorId) {
             return res.status(401).json({
                 message: "Unauthorized instructor to edit this course",
                 success: false,
@@ -227,7 +229,7 @@ export const editCourse = async (req, res) => {
             },
             { new: true, runValidators: true } // ✅ Return updated document
         );
-        if(!updatedCourse){
+        if (!updatedCourse) {
             return res.status(401).json({
                 message: "Failed to update course",
                 success: false,
@@ -250,26 +252,26 @@ const editLecturesOfCourse = async (res, lectures, courseId) => {
         let lecIds = [];
         if (lectures) {
             for (const lecture of lectures) {
-                if("_id" in lecture){
+                if ("_id" in lecture) {
                     //update existing lectures
                     console.log("updating lecture ", lecture.video);
                     console.log("updating lecture id ", lecture._id);
-                    
-                    const updatedLecture = await Lecture.findByIdAndUpdate(lecture._id,{
+
+                    const updatedLecture = await Lecture.findByIdAndUpdate(lecture._id, {
                         title: lecture.title,
                         lectureIndex: lecture.lectureIndex,
                         freePreview: lecture.freePreview,
                         video: lecture.video,
-                        videoPublicId: lecture.videoPublicId, 
+                        videoPublicId: lecture.videoPublicId,
                     })
                     console.log("updating lecture result ", updatedLecture);
-                    if(!updatedLecture){
+                    if (!updatedLecture) {
                         return res.status(401).json({
                             message: "Failed to update lecture",
                             success: false,
                         });
                     }
-                }else {
+                } else {
                     //create newlly added lectures
                     const newLecture = await Lecture.create({
                         title: lecture.title,
@@ -289,7 +291,7 @@ const editLecturesOfCourse = async (res, lectures, courseId) => {
             }
         }
 
-        if(lecIds.length > 0){
+        if (lecIds.length > 0) {
             const updateRes = await Course.findByIdAndUpdate(courseId,
                 { $push: { lectures: { $each: lecIds } } },  // Push all lectures to the course
             )
@@ -318,7 +320,7 @@ const editLecturesOfCourse = async (res, lectures, courseId) => {
 export const getInstructorCourseList = async (req, res) => {
     try {
         const instructorId = req.id
-        const courses = await Course.find({instructor: instructorId}).select("title pricing students")
+        const courses = await Course.find({ instructor: instructorId }).select("title pricing students")
         return res.status(201).json({
             message: "Course list fetched successfully",
             success: true,
@@ -342,7 +344,7 @@ export const getInstructorCourseByID = async (req, res) => {
             path: "lectures",
             select: "title freePreview lectureIndex video videoPublicId"
         })
-        if(!course){
+        if (!course) {
             return res.status(401).json({
                 message: "Course not found",
                 success: false,
@@ -357,6 +359,74 @@ export const getInstructorCourseByID = async (req, res) => {
         console.log(error)
         return res.status(401).json({
             message: "Error while fetching course",
+            success: false,
+        });
+    }
+}
+
+export const getDashboardStats = async (req, res) => {
+    try {
+        const instructorId = new mongoose.Types.ObjectId(req.id);
+
+        const result = await StudentCourses.aggregate([
+            { $unwind: "$courses" },
+
+            {
+                $lookup: {
+                    from: "courses",
+                    localField: "courses.course",
+                    foreignField: "_id",
+                    as: "courseDetails"
+                }
+            },
+            { $unwind: "$courseDetails" },
+
+            { $match: { "courseDetails.instructor": instructorId } },
+
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "student",
+                    foreignField: "_id",
+                    as: "studentDetails"
+                }
+            },
+            { $unwind: "$studentDetails" },
+
+            {
+                $group: {
+                    _id: "$student",
+                    username: { $first: "$studentDetails.username" },
+                    email: { $first: "$studentDetails.email" },
+                    courses: {
+                        $push: {
+                            courseId: "$courseDetails._id",
+                            title: "$courseDetails.title",
+                            pricing: "$courseDetails.pricing"
+                        }
+                    }
+                }
+            },
+
+            {
+                $project: {
+                    _id: 1,
+                    username: 1,
+                    email: 1,
+                    courses: 1
+                }
+            }
+        ]);
+
+        return res.status(201).json({
+            message: "Statistics calculated",
+            success: true,
+            students: result
+        });
+    } catch (error) {
+        console.log(error)
+        return res.status(401).json({
+            message: "Error while getting statistics",
             success: false,
         });
     }

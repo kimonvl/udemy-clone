@@ -1,19 +1,30 @@
 import { DollarSign, Users } from 'lucide-react'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchInstructorStatsStart } from '@/store/instructor/instructorSlice'
+import { selectInstructorTotalRevenue, selectInstructorTotalStudents } from '@/store/instructor/instructor.selector'
 
 const InstuctorDashboard = () => {
+    const dispatch = useDispatch()
+    const totalStudents = useSelector(selectInstructorTotalStudents)
+    const totalRevenue = useSelector(selectInstructorTotalRevenue)
+
+    useEffect(() => {
+        dispatch(fetchInstructorStatsStart())
+    }, [])
+
     const config = [
         {
             icon: Users,
             label: "Total Students",
-            value: 2
+            value: totalStudents?.length
         },
         {
             icon: DollarSign,
             label: "Total Revenue",
-            value: 2
+            value: totalRevenue
         },
     ]
     return (
@@ -44,18 +55,18 @@ const InstuctorDashboard = () => {
                         <Table className="w-full">
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Course Name</TableHead>
+                                    <TableHead>Total Courses</TableHead>
                                     <TableHead>Student Name</TableHead>
                                     <TableHead>Student Email</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {
-                                    [1, 2, 3, 4, 5].map((item, index) => (
-                                        <TableRow key={index}>
-                                            <TableCell className="font-medium">CourseTitle</TableCell>
-                                            <TableCell>Student name</TableCell>
-                                            <TableCell>Student email</TableCell>
+                                    totalStudents.map((student) => (
+                                        <TableRow key={student?._id}>
+                                            <TableCell className="font-medium">{student?.courses?.length} Courses</TableCell>
+                                            <TableCell>{student?.username}</TableCell>
+                                            <TableCell>{student?.email}</TableCell>
                                         </TableRow>
                                     ))
                                 }

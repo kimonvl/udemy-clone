@@ -16,7 +16,8 @@ const initialState = {
     temporaryDeletedVideos: [], //video public id's that are deleted but submit is not pressed yet (need to be deleted if edit proccedure is completed successfully)
     temporaryUploadedVideos: [], //video public id's that are uploaded but submit is not pressed yet (need to be deleted if edit proccedure is canceled in any way)
     initialImage: "",
-    error: null
+    totalStudents: [],
+    error: null,
 }
 
 export const instructorSlice = createSlice({
@@ -265,6 +266,17 @@ export const instructorSlice = createSlice({
             state.loading = false
             state.error = action.payload
         },
+        fetchInstructorStatsStart: (state) => {
+            state.loading = true
+        },
+        fetchInstructorStatsSuccess: (state, action) => {
+            state.loading = false
+            state.totalStudents = action.payload
+        },
+        fetchInstructorStatsFailure: (state, action) => {
+            state.loading = false
+            state.error = action.payload
+        },
     },
     extraReducers: (builder) => {
         builder.addCase(logoutSuccess, () => initialState); // ✅ Reset state on logout
@@ -322,5 +334,8 @@ export const {
     fetchSelectedInstructorCourseStart,
     fetchSelectedInstructorCourseSuccess,
     fetchSelectedInstructorCourseFailure,
+    fetchInstructorStatsStart,
+    fetchInstructorStatsSuccess,
+    fetchInstructorStatsFailure,
 } = instructorSlice.actions
 export default instructorReducer;// ✅ Ensure you're exporting the reducer as default

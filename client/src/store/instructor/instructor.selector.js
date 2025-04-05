@@ -32,3 +32,21 @@ export const selectInstructorSelectedCourse= createSelector(
     [selectInstructorReducer],
     (instructorSlice) => instructorSlice.instructorSelectedCourse
 );
+
+export const selectInstructorTotalStudents= createSelector(
+    [selectInstructorReducer],
+    (instructorSlice) => instructorSlice.totalStudents
+);
+
+export const selectInstructorTotalRevenue= createSelector(
+    [selectInstructorTotalStudents],
+    (totalStudents) => {
+        let total = 0
+        for (const student of totalStudents){
+            for (const course of student.courses){
+                total += course.pricing
+            }
+        }
+        return total
+    }
+);
